@@ -9,17 +9,16 @@ import re
 # --- CẤU HÌNH TRANG WEB (Mobile Friendly) ---
 st.set_page_config(layout="centered", page_title="XOSO MOBILE")
 
-# CSS Tinh chỉnh cho Mobile (Bỏ lề thừa, font to vừa phải)
+# CSS Tinh chỉnh: Font chữ to, nút bấm to
 st.markdown("""
 <style>
     .block-container { padding-top: 1rem; padding-bottom: 2rem; }
     h1 { font-size: 1.5rem !important; text-align: center; color: #c0392b; }
     h3 { font-size: 1.1rem !important; margin-top: 10px; margin-bottom: 5px; }
     .stButton button { width: 100%; border-radius: 8px; font-weight: bold; }
-    .result-text { font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.2; }
     
-    /* Màu nền cho các khối kết quả */
-    .stCode { background-color: #f0f2f6; }
+    /* Chỉnh font trong khung code to rõ hơn cho điện thoại */
+    .stCode { font-size: 14px !important; font-family: 'Courier New', monospace !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -67,19 +66,19 @@ if st.session_state.status:
     st.caption(st.session_state.status)
 
 # ==============================================================================
-# 2. DỮ LIỆU ĐẦU VÀO (Dùng Expander để giấu đi cho gọn màn hình)
+# 2. DỮ LIỆU ĐẦU VÀO (Ẩn gọn)
 # ==============================================================================
-with st.expander("📂 Xem dữ liệu thô (Loto/Full)"):
-    st.text_area("Loto (Để tính toán)", value=st.session_state.lotos, height=80)
-    st.text_area("Full Giải (Để tra cứu)", value=st.session_state.prizes, height=80)
+with st.expander("📂 Xem dữ liệu thô"):
+    st.text_area("Loto", value=st.session_state.lotos, height=80)
+    st.text_area("Full Giải", value=st.session_state.prizes, height=80)
 
 # ==============================================================================
-# 3. BIỂU ĐỒ (Tự động xuống dòng trên điện thoại)
+# 3. BIỂU ĐỒ (LUÔN NẰM NGANG - FIXED LAYOUT)
 # ==============================================================================
 st.markdown("### 📊 THỐNG KÊ (Đầu/Đuôi)")
 
 if st.session_state.lotos:
-    # Xử lý
+    # Xử lý text
     clean_text = re.sub(r'(\d+)\s*\(\s*(\d+)\s*\)', lambda m: (m.group(1) + " ") * int(m.group(2)), st.session_state.lotos)
     nums = [n for n in re.findall(r'\d+', clean_text) if len(n) >= 2]
     
@@ -87,24 +86,31 @@ if st.session_state.lotos:
         tails = Counter([n[-1] for n in nums])
         heads = Counter([n[-2] for n in nums])
         
-        # Tách thành 2 khối riêng biệt để mobile tự xếp chồng
-        col_duoi, col_dau = st.columns(2)
+        # --- TẠO BẢNG TEXT ĐỂ ÉP NẰM NGANG ---
+        # Tính toán để in ra từng dòng
+        chart_text = f"{'ĐUÔI (SUFFIX)':<18} | {'ĐẦU (PREFIX)'}\n"
+        chart_text += "-" * 38 + "\n"
         
-        with col_duoi:
-            st.markdown("**ĐUÔI (SUFFIX)**")
-            txt_duoi = ""
-            for t_num, t_freq in tails.most_common():
-                bar = "█" * t_freq
-                txt_duoi += f"{t_num}: {t_freq} {bar}\n"
-            st.code(txt_duoi, language="text")
-
-        with col_dau:
-            st.markdown("**ĐẦU (PREFIX)**")
-            txt_dau = ""
-            for h_num, h_freq in heads.most_common(): # Sắp xếp theo tần suất
-                bar = "█" * h_freq
-                txt_dau += f"{h_num}: {h_freq} {bar}\n"
-            st.code(txt_dau, language="text")
+        # Sắp xếp theo số lượng (nhiều nhất lên đầu)
+        sorted_tails = tails.most_common()
+        
+        for t_num, t_freq in sorted_tails:
+            h_freq = heads.get(t_num, 0)
+            
+            # Vẽ thanh bar ngắn gọn lại chút cho vừa màn hình điện thoại
+            # Dùng ký tự block ngắn hơn nếu cần, nhưng ở đây giữ nguyên
+            bar_t = "█" * t_freq
+            bar_h = "█" * h_freq
+            
+            # Format dòng: Đuôi bên trái | Đầu bên phải
+            # Cắt ngắn khoảng cách đệm (<18) để vừa màn hình mobile dọc
+            left_part = f"Đuôi {t_num}: {t_freq} {bar_t}"
+            right_part = f"Đầu {t_num}: {h_freq} {bar_h}"
+            
+            chart_text += f"{left_part:<18} | {right_part}\n"
+            
+        # Hiển thị bằng st.code -> Luôn giữ format ngang
+        st.code(chart_text, language="text")
 
 # ==============================================================================
 # 4. GHÉP 3 CÀNG
@@ -122,7 +128,7 @@ with st.container():
             res = [f"{cang}{p[0]}{p[1]}" for p in combs]
             st.success(" ".join(res))
         else:
-            st.warning("Nhập đủ Càng & Dàn (2 số+)")
+            st.warning("Nhập đủ thông tin")
 
 # ==============================================================================
 # 5. SOI CẦU
@@ -162,7 +168,6 @@ if query and st.session_state.prizes:
 
     results.sort(key=lambda x: x['score'], reverse=True)
 
-    # Hiển thị dạng thẻ (Card) cho dễ nhìn trên mobile
     for item in results:
         bg_color = "rgba(46, 204, 113, 0.2)" if item['found'] else "rgba(231, 76, 60, 0.1)"
         emoji = "✅" if item['found'] else "❌"
