@@ -7,18 +7,24 @@ from itertools import permutations, combinations
 import re
 
 # --- CẤU HÌNH ---
-st.set_page_config(layout="centered", page_title="XOSO MOBILE V43")
+st.set_page_config(layout="centered", page_title="XOSO MOBILE V44")
 
-# CSS: Tinh chỉnh khoảng cách cho siêu gọn
+# CSS: ÉP CỘT NẰM NGANG TRÊN MOBILE
 st.markdown("""
 <style>
-    .block-container { padding-top: 0.5rem; padding-bottom: 2rem; }
+    .block-container { padding-top: 0.5rem; padding-bottom: 5rem; }
     h1 { font-size: 1.2rem !important; text-align: center; color: #c0392b; margin-bottom: 0px; }
     h3 { font-size: 1rem !important; margin-top: 10px; margin-bottom: 5px; color: #2980b9; }
-    .stButton button { width: 100%; padding: 0px 5px; min-height: 0px; height: 38px; }
-    .stTextInput input { padding: 5px; font-size: 14px; }
-    div[data-testid="stExpander"] div[role="button"] p { font-size: 14px; font-weight: bold; }
-    .css-1544g2n { padding-top: 1rem; }
+    
+    /* Chỉnh nút bấm và ô nhập liệu nhỏ gọn nhất có thể */
+    .stButton button { width: 100%; padding: 0px !important; height: 38px; font-size: 12px; }
+    .stTextInput input { padding: 5px; font-size: 13px; min-height: 38px; }
+    
+    /* Thu hẹp khoảng cách giữa các cột */
+    div[data-testid="column"] { padding: 0px 2px !important; }
+    
+    /* Ẩn label expander cho gọn */
+    div[data-testid="stExpander"] div[role="button"] p { font-size: 13px; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -31,12 +37,12 @@ if 'status' not in st.session_state: st.session_state.status = ""
 if 'ghep_res' not in st.session_state: st.session_state.ghep_res = ""
 
 # ==============================================================================
-# 1. TẢI DỮ LIỆU (DÒNG 1)
+# 1. TẢI DỮ LIỆU (1 Dòng)
 # ==============================================================================
-c_date, c_btn = st.columns([2, 1])
-with c_date:
+c1, c2 = st.columns([2, 1], gap="small")
+with c1:
     date_input = st.date_input("D", datetime.now(), label_visibility="collapsed")
-with c_btn:
+with c2:
     if st.button("📥 TẢI"):
         try:
             d_str = date_input.strftime('%d-%m-%Y')
@@ -66,7 +72,7 @@ with st.expander("📂 Dữ liệu thô"):
     st.text_area("Full", st.session_state.prizes)
 
 # ==============================================================================
-# 2. THỐNG KÊ NGANG (DÒNG 2)
+# 2. THỐNG KÊ NGANG
 # ==============================================================================
 if st.session_state.lotos:
     clean = re.sub(r'(\d+)\s*\(\s*(\d+)\s*\)', lambda m: (m.group(1)+" ")*int(m.group(2)), st.session_state.lotos)
@@ -77,30 +83,36 @@ if st.session_state.lotos:
         txt = f"{'ĐUÔI':<15}| {'ĐẦU'}\n" + "-"*30 + "\n"
         for t, f in tails.most_common():
             h_f = heads.get(t, 0)
-            txt += f"Đuôi {t}: {f:<5}| Đầu {t}: {h_f}\n" # Bỏ thanh bar cho gọn dòng
+            txt += f"Đuôi {t}: {f:<5}| Đầu {t}: {h_f}\n" 
         st.code(txt, language="text")
 
 # ==============================================================================
-# 3. GHÉP 3 CÀNG (SIÊU GỌN - 2 DÒNG)
+# 3. GHÉP 3 CÀNG (SIÊU PHẨM 1 DÒNG)
 # ==============================================================================
 st.markdown("### 🔗 GHÉP 3 CÀNG")
 
-# DÒNG 1: INPUT CÀNG | INPUT DÀN | NÚT BẤM
-c1, c2, c3 = st.columns([1, 2, 1], gap="small")
+# Chia tỷ lệ cực chi tiết: 
+# C1(1.2): Càng (vừa đủ 1 số)
+# C2(2.5): Dàn (vừa đủ 4-5 số)
+# C3(1.5): Nút (nhỏ gọn)
+# C4(4.8): Kết quả (chiếm phần còn lại)
+c1, c2, c3, c4 = st.columns([1.2, 2.5, 1.5, 4.8], gap="small")
+
 with c1:
-    cang = st.text_input("C", placeholder="Càng", label_visibility="collapsed")
+    # Placeholder ngắn để người dùng biết nhập gì
+    cang = st.text_input("C", placeholder="1số", label_visibility="collapsed")
 with c2:
-    dan = st.text_input("D", placeholder="Dàn ghép", label_visibility="collapsed")
+    dan = st.text_input("D", placeholder="dàn", label_visibility="collapsed")
 with c3:
-    if st.button("GHÉP"):
+    if st.button("GỘP"):
         if cang and len(dan) >= 2:
             res = [f"{cang}{p[0]}{p[1]}" for p in combinations(list(dan), 2)]
             st.session_state.ghep_res = " ".join(res)
-        else: st.session_state.ghep_res = "Thiếu số!"
-
-# DÒNG 2: KẾT QUẢ
-if st.session_state.ghep_res:
-    st.info(st.session_state.ghep_res)
+        else:
+            st.session_state.ghep_res = ""
+with c4:
+    # Ô kết quả (disabled để chỉ đọc, giống label)
+    st.text_input("KQ", value=st.session_state.ghep_res, placeholder="Kết quả", label_visibility="collapsed", disabled=True)
 
 # ==============================================================================
 # 4. SOI CẦU
