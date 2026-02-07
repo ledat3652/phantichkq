@@ -7,28 +7,51 @@ from itertools import permutations, combinations
 import re
 
 # --- CẤU HÌNH ---
-st.set_page_config(layout="centered", page_title="XOSO MOBILE V44")
+st.set_page_config(layout="centered", page_title="XOSO V45")
 
-# CSS: ÉP CỘT NẰM NGANG TRÊN MOBILE
+# CSS: CƯỠNG ÉP NẰM NGANG TRÊN MOBILE
 st.markdown("""
 <style>
-    .block-container { padding-top: 0.5rem; padding-bottom: 5rem; }
-    h1 { font-size: 1.2rem !important; text-align: center; color: #c0392b; margin-bottom: 0px; }
-    h3 { font-size: 1rem !important; margin-top: 10px; margin-bottom: 5px; color: #2980b9; }
+    /* 1. Ép tất cả các cột (st.columns) phải nằm trên 1 hàng, không được xuống dòng */
+    div[data-testid="stHorizontalBlock"] {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 5px !important;
+        overflow-x: auto !important; /* Nếu bé quá thì cho trượt ngang chứ ko xuống dòng */
+        align-items: center !important; /* Căn giữa theo chiều dọc */
+    }
     
-    /* Chỉnh nút bấm và ô nhập liệu nhỏ gọn nhất có thể */
-    .stButton button { width: 100%; padding: 0px !important; height: 38px; font-size: 12px; }
-    .stTextInput input { padding: 5px; font-size: 13px; min-height: 38px; }
+    /* 2. Cho phép các cột co nhỏ tối đa */
+    div[data-testid="column"] {
+        width: auto !important;
+        flex: 1 1 auto !important;
+        min-width: 10px !important;
+    }
+
+    /* 3. Tinh chỉnh ô nhập liệu và nút bấm bé lại để vừa màn hình */
+    .stTextInput input { 
+        font-size: 12px; 
+        padding: 2px 5px; 
+        height: 36px; 
+        min-height: 36px; 
+    }
+    .stButton button { 
+        font-size: 11px; 
+        padding: 0px; 
+        height: 36px; 
+        min-height: 36px;
+        width: 100%;
+        line-height: 1;
+    }
     
-    /* Thu hẹp khoảng cách giữa các cột */
-    div[data-testid="column"] { padding: 0px 2px !important; }
-    
-    /* Ẩn label expander cho gọn */
-    div[data-testid="stExpander"] div[role="button"] p { font-size: 13px; font-weight: bold; }
+    /* 4. Giảm khoảng cách thừa thãi */
+    .block-container { padding-top: 1rem; padding-bottom: 2rem; }
+    h1 { margin-bottom: 0px; font-size: 1.2rem; text-align: center; color: #c0392b; }
+    p { margin-bottom: 0px; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("📱 XSMB MOBILE PRO")
+st.title("📱 XSMB V45")
 
 # --- SESSION ---
 if 'lotos' not in st.session_state: st.session_state.lotos = ""
@@ -37,9 +60,9 @@ if 'status' not in st.session_state: st.session_state.status = ""
 if 'ghep_res' not in st.session_state: st.session_state.ghep_res = ""
 
 # ==============================================================================
-# 1. TẢI DỮ LIỆU (1 Dòng)
+# 1. TẢI DỮ LIỆU (1 Dòng ngang)
 # ==============================================================================
-c1, c2 = st.columns([2, 1], gap="small")
+c1, c2 = st.columns([2, 1]) # Tỷ lệ 2:1
 with c1:
     date_input = st.date_input("D", datetime.now(), label_visibility="collapsed")
 with c2:
@@ -60,7 +83,7 @@ with c2:
                     lotos = sorted([p[-2:] for p in prizes])
                     st.session_state.lotos = " ".join(lotos)
                     st.session_state.prizes = " ".join(prizes)
-                    st.session_state.status = f"✅ OK: {d_str}"
+                    st.session_state.status = f"OK: {d_str}"
                 else: st.error("Thiếu số")
             else: st.error("Lỗi Web")
         except: st.error("Lỗi mạng")
@@ -72,7 +95,7 @@ with st.expander("📂 Dữ liệu thô"):
     st.text_area("Full", st.session_state.prizes)
 
 # ==============================================================================
-# 2. THỐNG KÊ NGANG
+# 2. THỐNG KÊ (Bắt buộc ngang)
 # ==============================================================================
 if st.session_state.lotos:
     clean = re.sub(r'(\d+)\s*\(\s*(\d+)\s*\)', lambda m: (m.group(1)+" ")*int(m.group(2)), st.session_state.lotos)
@@ -80,39 +103,36 @@ if st.session_state.lotos:
     if nums:
         tails = Counter([n[-1] for n in nums])
         heads = Counter([n[-2] for n in nums])
-        txt = f"{'ĐUÔI':<15}| {'ĐẦU'}\n" + "-"*30 + "\n"
+        # Dùng markdown table cho gọn
+        txt = f"```text\n{'ĐUÔI':<12}| {'ĐẦU'}\n" + "-"*25 + "\n"
         for t, f in tails.most_common():
             h_f = heads.get(t, 0)
-            txt += f"Đuôi {t}: {f:<5}| Đầu {t}: {h_f}\n" 
-        st.code(txt, language="text")
+            txt += f"Đuôi {t}: {f:<4}| Đầu {t}: {h_f}\n" 
+        txt += "```"
+        st.markdown(txt)
 
 # ==============================================================================
-# 3. GHÉP 3 CÀNG (SIÊU PHẨM 1 DÒNG)
+# 3. GHÉP 3 CÀNG (ÉP 1 DÒNG: CÀNG - DÀN - NÚT - KQ)
 # ==============================================================================
 st.markdown("### 🔗 GHÉP 3 CÀNG")
 
-# Chia tỷ lệ cực chi tiết: 
-# C1(1.2): Càng (vừa đủ 1 số)
-# C2(2.5): Dàn (vừa đủ 4-5 số)
-# C3(1.5): Nút (nhỏ gọn)
-# C4(4.8): Kết quả (chiếm phần còn lại)
-c1, c2, c3, c4 = st.columns([1.2, 2.5, 1.5, 4.8], gap="small")
+# Chia 4 cột với tỷ lệ cực nhỏ để nhét vừa 1 dòng điện thoại
+# C1: Càng (15%) | C2: Dàn (30%) | C3: Nút (15%) | C4: KQ (40%)
+c1, c2, c3, c4 = st.columns([1.5, 3, 1.5, 4], gap="small")
 
 with c1:
-    # Placeholder ngắn để người dùng biết nhập gì
-    cang = st.text_input("C", placeholder="1số", label_visibility="collapsed")
+    cang = st.text_input("C", placeholder="C", label_visibility="collapsed")
 with c2:
-    dan = st.text_input("D", placeholder="dàn", label_visibility="collapsed")
+    dan = st.text_input("D", placeholder="Dàn", label_visibility="collapsed")
 with c3:
-    if st.button("GỘP"):
+    if st.button("GO"):
         if cang and len(dan) >= 2:
             res = [f"{cang}{p[0]}{p[1]}" for p in combinations(list(dan), 2)]
             st.session_state.ghep_res = " ".join(res)
         else:
-            st.session_state.ghep_res = ""
+            st.session_state.ghep_res = "Lỗi"
 with c4:
-    # Ô kết quả (disabled để chỉ đọc, giống label)
-    st.text_input("KQ", value=st.session_state.ghep_res, placeholder="Kết quả", label_visibility="collapsed", disabled=True)
+    st.text_input("K", value=st.session_state.ghep_res, placeholder="KQ", label_visibility="collapsed", disabled=True)
 
 # ==============================================================================
 # 4. SOI CẦU
@@ -153,7 +173,7 @@ if q and st.session_state.prizes:
         icon = "✅" if r['ok'] else "❌"
         bg = "#d4edda" if r['ok'] else "#f8d7da"
         st.markdown(f"""
-        <div style="background:{bg};padding:5px;border-radius:5px;margin-bottom:5px;font-size:14px;">
-        <b>{icon} {r['p']}</b> (Điểm: {r['s']})<br>
-        <span style="font-family:monospace;font-size:12px;">{', '.join(r['f']) if r['ok'] else ''}</span>
+        <div style="background:{bg};padding:5px;border-radius:5px;margin-bottom:5px;font-size:13px;">
+        <b>{icon} {r['p']}</b> (Đ:{r['s']})<br>
+        <span style="font-family:monospace;font-size:11px;">{', '.join(r['f']) if r['ok'] else ''}</span>
         </div>""", unsafe_allow_html=True)
