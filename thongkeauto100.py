@@ -7,9 +7,9 @@ from itertools import permutations, combinations
 import re
 
 # --- CẤU HÌNH ---
-st.set_page_config(layout="centered", page_title="XOSO MOBILE V43")
+st.set_page_config(layout="centered", page_title="XOSO MOBILE V43-MOD")
 
-# CSS: Tinh chỉnh khoảng cách cho siêu gọn
+# CSS: Tinh chỉnh khoảng cách cho siêu gọn (Giữ nguyên bản cũ)
 st.markdown("""
 <style>
     .block-container { padding-top: 0.5rem; padding-bottom: 2rem; }
@@ -81,29 +81,7 @@ if st.session_state.lotos:
         st.code(txt, language="text")
 
 # ==============================================================================
-# 3. GHÉP 3 CÀNG (SIÊU GỌN - 2 DÒNG)
-# ==============================================================================
-st.markdown("### 🔗 GHÉP 3 CÀNG")
-
-# DÒNG 1: INPUT CÀNG | INPUT DÀN | NÚT BẤM
-c1, c2, c3 = st.columns([1, 2, 1], gap="small")
-with c1:
-    cang = st.text_input("C", placeholder="Càng", label_visibility="collapsed")
-with c2:
-    dan = st.text_input("D", placeholder="Dàn ghép", label_visibility="collapsed")
-with c3:
-    if st.button("GHÉP"):
-        if cang and len(dan) >= 2:
-            res = [f"{cang}{p[0]}{p[1]}" for p in combinations(list(dan), 2)]
-            st.session_state.ghep_res = " ".join(res)
-        else: st.session_state.ghep_res = "Thiếu số!"
-
-# DÒNG 2: KẾT QUẢ
-if st.session_state.ghep_res:
-    st.info(st.session_state.ghep_res)
-
-# ==============================================================================
-# 4. SOI CẦU
+# 3. SOI CẦU (CHUYỂN LÊN TRÊN GHÉP SỐ)
 # ==============================================================================
 st.markdown("### 🔍 SOI CẦU")
 q = st.text_input("Soi", placeholder="Nhập số...", label_visibility="collapsed")
@@ -145,3 +123,25 @@ if q and st.session_state.prizes:
         <b>{icon} {r['p']}</b> (Điểm: {r['s']})<br>
         <span style="font-family:monospace;font-size:12px;">{', '.join(r['f']) if r['ok'] else ''}</span>
         </div>""", unsafe_allow_html=True)
+
+# ==============================================================================
+# 4. GHÉP 3 CÀNG (ĐÃ CHUYỂN XUỐNG DƯỚI CÙNG)
+# ==============================================================================
+st.markdown("### 🔗 GHÉP 3 CÀNG")
+
+# DÒNG 1: INPUT CÀNG | INPUT DÀN | NÚT BẤM
+c1, c2, c3 = st.columns([1, 2, 1], gap="small")
+with c1:
+    cang = st.text_input("C", placeholder="Càng", label_visibility="collapsed")
+with c2:
+    dan = st.text_input("D", placeholder="Dàn ghép", label_visibility="collapsed")
+with c3:
+    if st.button("GHÉP"):
+        if cang and len(dan) >= 2:
+            res = [f"{cang}{p[0]}{p[1]}" for p in combinations(list(dan), 2)]
+            st.session_state.ghep_res = " ".join(res)
+        else: st.session_state.ghep_res = "Thiếu số!"
+
+# DÒNG 2: KẾT QUẢ
+if st.session_state.ghep_res:
+    st.info(st.session_state.ghep_res)
